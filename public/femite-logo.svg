@@ -1,0 +1,29 @@
+<svg width="320" height="90" viewBox="0 0 320 90" xmlns="http://www.w3.org/2000/svg">
+  <!-- Clean hemp leaf inspired mark -->
+  <g transform="translate(20,15)">
+    <!-- Main hemp leaf shape -->
+    <path d="M10,30 Q8,20 15,15 Q25,10 35,15 Q42,20 40,30 Q35,40 25,42 Q15,40 10,30 Z" fill="#5A7C5A" opacity="0.9"/>
+    
+    <!-- Leaf detail lines -->
+    <path d="M15,20 Q25,15 35,20" stroke="#87B087" stroke-width="1.5" fill="none" opacity="0.8"/>
+    <path d="M18,25 Q25,22 32,25" stroke="#87B087" stroke-width="1" fill="none" opacity="0.6"/>
+    <path d="M20,30 Q25,28 30,30" stroke="#87B087" stroke-width="1" fill="none" opacity="0.6"/>
+    
+    <!-- Simple accent dot -->
+    <circle cx="25" cy="25" r="2" fill="#E8F5E8" opacity="0.8"/>
+  </g>
+  
+  <!-- Typography -->
+  <text x="80" y="45" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="32" font-weight="300" fill="#1F2937" letter-spacing="0.5px">
+    femite
+  </text>
+  
+  <!-- Clean tagline -->
+  <text x="82" y="62" font-family="'Inter', Arial, sans-serif" font-size="10" fill="#6B7280" letter-spacing="1.5px" opacity="0.8">
+    sustainable hemp fashion
+  </text>
+  
+  <!-- Minimal accent -->
+  <circle cx="280" cy="30" r="3" fill="#87B087" opacity="0.3"/>
+  <circle cx="290" cy="25" r="2" fill="#5A7C5A" opacity="0.4"/>
+</svg>

@@ -1,0 +1,44 @@
+<svg width="320" height="90" viewBox="0 0 320 90" xmlns="http://www.w3.org/2000/svg">
+  <!-- Clean animated hemp leaf logo -->
+  <g transform="translate(20,15)">
+    <!-- Gently pulsing hemp leaf -->
+    <path d="M10,30 Q8,20 15,15 Q25,10 35,15 Q42,20 40,30 Q35,40 25,42 Q15,40 10,30 Z" fill="#5A7C5A" opacity="0.9">
+      <animate attributeName="opacity" values="0.9;0.7;0.9" dur="3s" repeatCount="indefinite"/>
+    </path>
+    
+    <!-- Subtle leaf detail animations -->
+    <path d="M15,20 Q25,15 35,20" stroke="#87B087" stroke-width="1.5" fill="none" opacity="0.8">
+      <animate attributeName="opacity" values="0.8;0.5;0.8" dur="2.5s" repeatCount="indefinite"/>
+    </path>
+    <path d="M18,25 Q25,22 32,25" stroke="#87B087" stroke-width="1" fill="none" opacity="0.6">
+      <animate attributeName="opacity" values="0.6;0.3;0.6" dur="3.2s" repeatCount="indefinite"/>
+    </path>
+    <path d="M20,30 Q25,28 30,30" stroke="#87B087" stroke-width="1" fill="none" opacity="0.6">
+      <animate attributeName="opacity" values="0.6;0.4;0.6" dur="2.8s" repeatCount="indefinite"/>
+    </path>
+    
+    <!-- Gentle pulsing accent -->
+    <circle cx="25" cy="25" r="2" fill="#E8F5E8" opacity="0.8">
+      <animate attributeName="r" values="2;2.5;2" dur="4s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  
+  <!-- Typography with subtle fade -->
+  <text x="80" y="45" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="32" font-weight="300" fill="#1F2937" letter-spacing="0.5px">
+    femite
+    <animate attributeName="opacity" values="1;0.8;1" dur="5s" repeatCount="indefinite"/>
+  </text>
+  
+  <!-- Clean tagline -->
+  <text x="82" y="62" font-family="'Inter', Arial, sans-serif" font-size="10" fill="#6B7280" letter-spacing="1.5px" opacity="0.8">
+    sustainable hemp fashion
+  </text>
+  
+  <!-- Floating minimal accents -->
+  <circle cx="280" cy="30" r="3" fill="#87B087" opacity="0.3">
+    <animate attributeName="cy" values="30;28;30" dur="3.5s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="290" cy="25" r="2" fill="#5A7C5A" opacity="0.4">
+    <animate attributeName="cy" values="25;27;25" dur="4s" repeatCount="indefinite"/>
+  </circle>
+</svg>

@@ -1,0 +1,13 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Ultra-clean favicon hemp leaf -->
+  <g transform="translate(6,6)">
+    <!-- Simplified hemp leaf -->
+    <path d="M4,12 Q3,7 6,4 Q10,2 14,4 Q17,7 16,12 Q14,17 10,18 Q6,17 4,12 Z" fill="#5A7C5A"/>
+    
+    <!-- Single defining line -->
+    <path d="M6,8 Q10,6 14,8" stroke="#87B087" stroke-width="1.5" fill="none" opacity="0.9"/>
+    
+    <!-- Central dot for recognition -->
+    <circle cx="10" cy="10" r="1.5" fill="#E8F5E8" opacity="0.9"/>
+  </g>
+</svg>

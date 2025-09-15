@@ -1,0 +1,8 @@
+.next/
+node_modules/
+design_inspiration/
+docs/
+.env
+.env.local
+BACKEND_COMPLETION_SUMMARY.md
+cookies.txt
