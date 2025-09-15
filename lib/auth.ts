@@ -123,7 +123,7 @@ export async function createSession(userId: string, role: string, sessionId?: st
     expires,
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict', // More secure than 'lax'
+    sameSite: 'lax', // Better compatibility for production
     path: '/',
   })
   
@@ -133,7 +133,7 @@ export async function createSession(userId: string, role: string, sessionId?: st
     expires,
     httpOnly: false, // Needs to be readable by frontend
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax',
     path: '/',
   })
   
@@ -193,7 +193,7 @@ export function deleteSession() {
     expires: new Date(0),
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax',
     path: '/',
   })
   
@@ -202,7 +202,7 @@ export function deleteSession() {
     expires: new Date(0),
     httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax',
     path: '/',
   })
 }

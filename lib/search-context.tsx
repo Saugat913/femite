@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback } from 'react'
 import { Product } from '@/types'
-import { productService } from '@/services/product-service'
+import { clientProductService } from '@/services/product-service-client'
 
 interface SearchState {
   query: string
@@ -45,7 +45,7 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
     
     try {
       // Use the API to search products
-      const searchResults = await productService.searchProducts(query, 50)
+      const searchResults = await clientProductService.searchProducts(query, 50)
       
       setState(prev => ({
         ...prev,

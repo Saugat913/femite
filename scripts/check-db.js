@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// For development/testing with self-signed certificates
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+
 const { Pool } = require('pg')
 
 async function checkDatabase() {
@@ -11,13 +14,15 @@ async function checkDatabase() {
     throw new Error('DATABASE_URL environment variable is required')
   }
   
+  const requiresSSL = connectionString.includes('aivencloud.com') || 
+                     connectionString.includes('sslmode=require') ||
+                     process.env.NODE_ENV === 'production'
+  
   const pool = new Pool({
     connectionString,
-    ssl: connectionString.includes('aivencloud.com') 
-      ? { rejectUnauthorized: false } 
-      : process.env.NODE_ENV === 'production' 
-        ? { rejectUnauthorized: false } 
-        : false,
+    ssl: requiresSSL 
+      ? { rejectUnauthorized: false, checkServerIdentity: false } 
+      : false,
   })
   
   const client = await pool.connect()

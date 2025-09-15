@@ -6,7 +6,6 @@ const key = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret'
 
 // Protected API routes that require authentication
 const protectedApiRoutes = [
-  '/api/cart',
   '/api/checkout',
   '/api/orders',
   '/api/auth/profile',
@@ -16,7 +15,6 @@ const protectedApiRoutes = [
 // Protected pages that require authentication
 const protectedPages = [
   '/account',
-  '/cart',
   '/checkout',
   '/orders'
 ]

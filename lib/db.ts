@@ -1,17 +1,39 @@
 import { Pool } from 'pg'
 
+// For development/testing with self-signed certificates
+if (process.env.NODE_ENV === 'development' || 
+    (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('aivencloud.com'))) {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+}
+
 let pool: Pool
 
 export function getDb() {
   if (!pool) {
     const connectionString = process.env.DATABASE_URL
+    if (!connectionString) {
+      throw new Error('DATABASE_URL environment variable is required')
+    }
     
-    // For cloud databases like Aiven, we need SSL but with relaxed certificate verification
-    const sslConfig = connectionString?.includes('aivencloud.com') 
-      ? { rejectUnauthorized: false } // Accept self-signed certificates for Aiven
-      : process.env.NODE_ENV === 'production' 
-        ? { rejectUnauthorized: false } 
-        : false
+    // For cloud databases like Aiven and other SSL-required databases, 
+    // we need SSL but with relaxed certificate verification to handle self-signed certs
+    const requiresSSL = connectionString.includes('aivencloud.com') || 
+                       connectionString.includes('sslmode=require') ||
+                       process.env.NODE_ENV === 'production'
+    
+    const sslConfig = requiresSSL 
+      ? { 
+          rejectUnauthorized: false, 
+          checkServerIdentity: () => undefined,
+          secureProtocol: 'TLSv1_2_method'
+        } // Accept self-signed certificates
+      : false
+    
+    console.log('Database connection config:', {
+      hasConnectionString: !!connectionString,
+      requiresSSL,
+      sslConfig: sslConfig ? 'enabled with relaxed verification' : 'disabled'
+    })
     
     pool = new Pool({
       connectionString,

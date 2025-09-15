@@ -13,13 +13,15 @@ async function seedDatabase() {
     throw new Error('DATABASE_URL environment variable is required')
   }
   
+  const requiresSSL = connectionString.includes('aivencloud.com') || 
+                     connectionString.includes('sslmode=require') ||
+                     process.env.NODE_ENV === 'production'
+  
   const pool = new Pool({
     connectionString,
-    ssl: connectionString.includes('aivencloud.com') 
-      ? { rejectUnauthorized: false } 
-      : process.env.NODE_ENV === 'production' 
-        ? { rejectUnauthorized: false } 
-        : false,
+    ssl: requiresSSL 
+      ? { rejectUnauthorized: false, checkServerIdentity: false } 
+      : false,
   })
   
   const client = await pool.connect()
