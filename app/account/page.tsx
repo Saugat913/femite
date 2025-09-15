@@ -9,7 +9,7 @@ import Layout from '@/components/Layout'
 import AddressForm from '@/components/AddressForm'
 import { useAuth } from '@/lib/auth-context'
 import { AddressAPI } from '@/lib/api/addresses'
-import type { Address } from '@/lib/types/address'
+import type { Address, CreateAddressRequest } from '@/lib/types/address'
 
 export default function AccountPage() {
   const [activeTab, setActiveTab] = useState('account')
@@ -396,7 +396,8 @@ export default function AccountPage() {
                         if (editingAddress) {
                           await AddressAPI.updateAddress(editingAddress.id, addressData)
                         } else {
-                          await AddressAPI.createAddress(addressData)
+                          // Type assertion since form data contains all required fields for creation
+                          await AddressAPI.createAddress(addressData as CreateAddressRequest)
                         }
                         setShowAddressForm(false)
                         setEditingAddress(null)

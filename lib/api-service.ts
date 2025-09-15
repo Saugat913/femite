@@ -186,44 +186,14 @@ export const withApiErrorHandler = <T extends any[], R>(
   }
 }
 
-// React hook for API loading states (client-side only)
-export const useApiState = () => {
-  if (typeof window === 'undefined') {
-    // Server-side fallback
-    return {
-      loading: false,
-      error: null,
-      execute: async <T>(apiCall: () => Promise<T>): Promise<T | null> => {
-        try {
-          return await apiCall()
-        } catch (error) {
-          console.error('API Error:', error)
-          return null
-        }
-      }
-    }
-  }
-  
-  // Client-side implementation with React hooks
-  const { useState } = require('react')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const execute = async <T>(apiCall: () => Promise<T>): Promise<T | null> => {
-    setLoading(true)
-    setError(null)
-    
+// Utility for API error handling (non-hook version)
+export const createApiExecutor = () => {
+  return async <T>(apiCall: () => Promise<T>): Promise<T | null> => {
     try {
-      const result = await apiCall()
-      return result
+      return await apiCall()
     } catch (error) {
-      const errorMessage = error instanceof ApiError ? error.message : 'An error occurred'
-      setError(errorMessage)
+      console.error('API Error:', error)
       return null
-    } finally {
-      setLoading(false)
     }
   }
-
-  return { loading, error, execute }
 }

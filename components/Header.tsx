@@ -189,7 +189,7 @@ export default function Header() {
                         >
                           <div className="w-16 h-16 bg-hemp-beige rounded-lg overflow-hidden flex-shrink-0 mr-4">
                             <img
-                              src={product.image_url || product.image}
+                              src={product.image}
                               alt={product.name}
                               className="w-full h-full object-cover"
                               onError={(e) => {
@@ -446,9 +446,9 @@ export default function Header() {
                           className="mobile-search-result flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:border-hemp-green-medium hover:bg-hemp-green-light/20 transition-all shadow-sm"
                         >
                           <div className="w-16 h-16 bg-hemp-beige rounded-lg overflow-hidden flex-shrink-0 mr-4">
-                            {(product.image_url || product.image) ? (
+                            {product.image ? (
                               <img
-                                src={product.image_url || product.image}
+                                src={product.image}
                                 alt={product.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
@@ -467,7 +467,7 @@ export default function Header() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-gray-800 truncate mb-1 text-base">{product.name}</h3>
-                            <p className="text-sm text-gray-500 mb-2">{product.categories || product.category}</p>
+                            <p className="text-sm text-gray-500 mb-2">{product.category}</p>
                             <p className="text-hemp-green-dark font-bold text-lg">${product.price}</p>
                           </div>
                         </Link>

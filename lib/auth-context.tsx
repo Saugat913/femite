@@ -7,6 +7,7 @@ interface User {
   name: string
   email: string
   role: string
+  createdAt?: string
 }
 
 interface AuthContextType {
@@ -43,7 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             id: data.data.id,
             email: data.data.email,
             role: data.data.role,
-            name: data.data.email.split('@')[0] // Use email username as name
+            name: data.data.email.split('@')[0], // Use email username as name
+            createdAt: data.data.createdAt
           })
         } else {
           setUser(null)
@@ -80,7 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: data.data.user.id,
         email: data.data.user.email,
         role: data.data.user.role,
-        name: data.data.user.email.split('@')[0]
+        name: data.data.user.email.split('@')[0],
+        createdAt: data.data.user.createdAt
       })
     }
   }
@@ -106,7 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: data.data.user.id,
         email: data.data.user.email,
         role: data.data.user.role,
-        name: data.data.user.email.split('@')[0]
+        name: data.data.user.email.split('@')[0],
+        createdAt: data.data.user.createdAt
       })
     }
   }

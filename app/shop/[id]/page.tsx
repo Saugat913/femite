@@ -99,7 +99,7 @@ export default function ProductPage({ params }: ProductPageProps) {
         productId: product.id,
         name: product.name,
         price: product.price,
-        image: product.image_url || product.image,
+        image: product.image,
         size: selectedSize,
         color: selectedColor
       }, quantity)
@@ -146,7 +146,7 @@ export default function ProductPage({ params }: ProductPageProps) {
         productId: product.id,
         name: product.name,
         price: product.price,
-        image: product.image_url || product.image,
+        image: product.image,
         size: selectedSize,
         color: selectedColor
       }, quantity)
@@ -191,7 +191,7 @@ export default function ProductPage({ params }: ProductPageProps) {
           <div className="space-y-4">
             <div className="aspect-square bg-hemp-beige rounded-lg overflow-hidden relative">
               <Image
-                src={product.image_url || product.image}
+                src={product.image}
                 alt={product.name}
                 fill
                 className="object-cover"

@@ -6,3 +6,4 @@ docs/
 .env.local
 BACKEND_COMPLETION_SUMMARY.md
 cookies.txt
+DEPLOYMENT.md

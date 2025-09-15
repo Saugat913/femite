@@ -23,7 +23,7 @@ export default function Shop() {
         setProducts(fetchedProducts)
         
         // Extract categories from products
-        const productCategories = Array.from(new Set(fetchedProducts.map((p: any) => p.category)))
+        const productCategories = Array.from(new Set(fetchedProducts.map((p: any) => p.category))) as string[]
         setCategories(['All', ...productCategories])
       } catch (error) {
         console.error('Error fetching products:', error)

@@ -8,7 +8,8 @@ import Layout from '@/components/Layout'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default function VerifyEmailPage() {
-  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'resending'>('loading')
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
+  const [isResending, setIsResending] = useState(false)
   const [message, setMessage] = useState('')
   const [email, setEmail] = useState('')
   const router = useRouter()
@@ -51,7 +52,7 @@ export default function VerifyEmailPage() {
   const handleResendVerification = async () => {
     if (!email) return
 
-    setStatus('resending')
+    setIsResending(true)
     
     try {
       const response = await fetch('/api/auth/verify-email', {
@@ -75,7 +76,7 @@ export default function VerifyEmailPage() {
     } catch (error) {
       setMessage('Network error. Please try again.')
     } finally {
-      setStatus('error') // Stay on error state to show resend option
+      setIsResending(false)
     }
   }
 
@@ -145,10 +146,10 @@ export default function VerifyEmailPage() {
                       />
                       <button
                         onClick={handleResendVerification}
-                        disabled={!email || status === 'resending'}
+                        disabled={!email || isResending}
                         className="btn-primary w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {status === 'resending' ? (
+                        {isResending ? (
                           <LoadingSpinner size="sm" text="Sending..." className="py-1" />
                         ) : (
                           'Resend Verification Email'

@@ -12,6 +12,8 @@ export interface BlogPost {
   slug: string
   publishedAt: string
   author?: string
+  metaTitle?: string
+  metaDescription?: string
 }
 
 export class BlogService {

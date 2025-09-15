@@ -66,7 +66,7 @@ export async function PUT(
 
     // Prevent invalid status transitions
     const currentStatus = order.status
-    const invalidTransitions = {
+    const invalidTransitions: Record<string, string[]> = {
       'delivered': ['pending', 'pending_payment', 'paid', 'processing', 'shipped'],
       'cancelled': ['paid', 'processing', 'shipped', 'delivered']
     }

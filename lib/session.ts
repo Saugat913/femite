@@ -20,6 +20,7 @@ export interface SessionPayload {
   sessionId?: string
   iat?: number
   exp?: number
+  [key: string]: any
 }
 
 export interface RefreshTokenData {
@@ -166,7 +167,7 @@ export async function revokeRefreshToken(tokenId: string): Promise<boolean> {
       WHERE id = $1
     `, [tokenId])
     
-    return result.rowCount > 0
+    return (result.rowCount ?? 0) > 0
   } catch (error) {
     console.error('Error revoking refresh token:', error)
     return false
