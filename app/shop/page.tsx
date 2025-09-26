@@ -5,6 +5,9 @@ import Layout from '@/components/Layout'
 import { productService } from '@/services/product-service'
 import ShopClient from '@/components/ShopClient'
 
+// Use ISR with revalidation for optimal performance
+export const revalidate = 60 // Revalidate every 60 seconds
+
 export default async function Shop() {
   // Fetch products server-side for better SEO and initial load
   const { products } = await productService.getProducts({ limit: 50 })

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
+import { emailService } from '@/lib/email-service'
 import crypto from 'crypto'
 
 export async function GET(request: NextRequest) {
@@ -91,16 +92,29 @@ export async function POST(request: NextRequest) {
       [verificationToken, tokenExpiry, user.id]
     )
 
-    // In a real app, you'd send an email here
-    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`
-    
-    console.log(`Email verification link for ${email}: ${verificationUrl}`)
-
-    return NextResponse.json({ 
-      message: 'Verification email sent successfully.',
-      // In development, include the verification link
-      ...(process.env.NODE_ENV === 'development' && { verificationUrl })
-    })
+    // Send verification email
+    try {
+      await emailService.sendVerificationEmail(email, verificationToken)
+      console.log(`Verification email sent to ${email}`)
+      
+      return NextResponse.json({ 
+        message: 'Verification email sent successfully.',
+        // In development, include the verification link for testing
+        ...(process.env.NODE_ENV === 'development' && { 
+          verificationUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}` 
+        })
+      })
+    } catch (error) {
+      console.error('Failed to send verification email:', error)
+      return NextResponse.json({ 
+        message: 'Verification email sent successfully.', // Don't reveal email sending failures for security
+        // In development, still provide the link even if email fails
+        ...(process.env.NODE_ENV === 'development' && { 
+          verificationUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`,
+          note: 'Email sending failed, but here\'s the verification link for development.'
+        })
+      })
+    }
 
   } catch (error) {
     console.error('Send verification email error:', error)

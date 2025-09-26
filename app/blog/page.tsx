@@ -3,6 +3,9 @@ import Link from 'next/link'
 import Layout from '@/components/Layout'
 import { blogService } from '@/services/blog-service'
 
+// Use ISR with revalidation for optimal performance
+export const revalidate = 180 // Revalidate every 3 minutes
+
 export default async function Blog() {
   const blogPosts = await blogService.getBlogPosts()
   return (

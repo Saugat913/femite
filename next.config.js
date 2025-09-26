@@ -1,12 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable SSG export conditionally
-  output: process.env.BUILD_MODE === 'export' ? 'export' : undefined,
+  // Enable SSG export conditionally (commented out to enable dynamic rendering)
+  // output: process.env.BUILD_MODE === 'export' ? 'export' : undefined,
   trailingSlash: true,
   
   images: {
-    // For SSG export
-    unoptimized: process.env.BUILD_MODE === 'export',
+    // Enable optimized images for better performance
+    unoptimized: false,
     remotePatterns: [
       {
         protocol: 'https',

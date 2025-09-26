@@ -4,6 +4,9 @@ import { notFound } from 'next/navigation'
 import Layout from '@/components/Layout'
 import { blogService } from '@/services/blog-service'
 
+// Use ISR with revalidation for optimal performance
+export const revalidate = 300 // Revalidate every 5 minutes
+
 interface BlogPostPageProps {
   params: {
     slug: string

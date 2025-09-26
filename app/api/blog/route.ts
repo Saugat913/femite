@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
+import { revalidatePath } from 'next/cache'
 
 export async function GET(request: NextRequest) {
   try {
@@ -54,14 +55,19 @@ export async function GET(request: NextRequest) {
       metaDescription: post.meta_description
     }))
 
-    return NextResponse.json({ 
+    const res = NextResponse.json({ 
       blogPosts, 
       total: blogPosts.length,
       limit,
       offset 
     })
+    res.headers.set('Cache-Control', 'no-store')
+    return res
   } catch (error) {
     console.error('GET /api/blog error:', error)
     return NextResponse.json({ error: 'Failed to fetch blog posts' }, { status: 500 })
   }
 }
+
+// POST, PUT, DELETE methods removed - managed by admin panel
+// Admin panel should use the /api/revalidate endpoint after making changes

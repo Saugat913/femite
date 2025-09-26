@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { hashPassword, createSession, isValidEmail, encrypt } from '@/lib/auth'
+import { emailService } from '@/lib/email-service'
 import { v4 as uuidv4 } from 'uuid'
+import crypto from 'crypto'
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,17 +35,32 @@ export async function POST(request: NextRequest) {
 
     // Hash password
     const passwordHash = await hashPassword(password)
+    
+    // Generate email verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex')
+    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
 
-    // Create user
+    // Create user with email verification fields
     const id = uuidv4()
     const result = await query(
-      'INSERT INTO users (id, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, email, role, created_at',
-      [id, email.toLowerCase(), passwordHash, role]
+      `INSERT INTO users (id, email, password_hash, role, email_verification_token, email_verification_token_expires_at, email_verified) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) 
+       RETURNING id, email, role, created_at`,
+      [id, email.toLowerCase(), passwordHash, role, verificationToken, tokenExpiry, false]
     )
 
     const user = result.rows[0]
+    
+    // Send verification email
+    try {
+      await emailService.sendVerificationEmail(user.email, verificationToken)
+      console.log(`Verification email sent to ${user.email}`)
+    } catch (error) {
+      console.error('Failed to send verification email:', error)
+      // Continue with registration even if email fails
+    }
 
-    // Create session
+    // Create session (but user will need to verify email)
     await createSession(user.id, user.role)
     
     // Generate JWT token for API compatibility
@@ -59,7 +76,8 @@ export async function POST(request: NextRequest) {
         user,
         token
       },
-      message: 'Registration successful'
+      message: 'Registration successful! Please check your email to verify your account.',
+      requiresEmailVerification: true
     }, { status: 201 })
   } catch (error) {
     console.error('POST /api/auth/register error:', error)

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
+import { emailService } from '@/lib/email-service'
 import { v4 as uuidv4 } from 'uuid'
 
 export async function POST(request: NextRequest) {
@@ -39,6 +40,8 @@ export async function POST(request: NextRequest) {
       [email.toLowerCase()]
     )
 
+    let isNewSubscription = false
+    
     if (existingResult.rows.length > 0) {
       const existing = existingResult.rows[0]
       if (existing.active) {
@@ -52,6 +55,7 @@ export async function POST(request: NextRequest) {
           'UPDATE newsletter_subscriptions SET active = true, subscribed_at = now() WHERE id = $1',
           [existing.id]
         )
+        isNewSubscription = true // Treat reactivation as new for email purposes
       }
     } else {
       // Add new subscription
@@ -59,6 +63,18 @@ export async function POST(request: NextRequest) {
         'INSERT INTO newsletter_subscriptions (email) VALUES ($1)',
         [email.toLowerCase()]
       )
+      isNewSubscription = true
+    }
+    
+    // Send welcome email for new subscriptions
+    if (isNewSubscription) {
+      try {
+        await emailService.sendNewsletterWelcome(email)
+        console.log(`Newsletter welcome email sent to ${email}`)
+      } catch (error) {
+        console.error('Failed to send newsletter welcome email:', error)
+        // Continue even if email fails - subscription is still recorded
+      }
     }
 
     return NextResponse.json({

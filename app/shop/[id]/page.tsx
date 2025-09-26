@@ -7,6 +7,9 @@ import { productService } from '@/services/product-service'
 import ProductClient from '@/components/ProductClient'
 import { Product } from '@/types'
 
+// Use ISR with revalidation for optimal performance
+export const revalidate = 300 // Revalidate every 5 minutes
+
 interface ProductPageProps {
   params: {
     id: string

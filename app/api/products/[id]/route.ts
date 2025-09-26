@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
+import { revalidatePath } from 'next/cache'
 
 export async function GET(
   request: NextRequest,
@@ -57,3 +58,6 @@ export async function GET(
     return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 })
   }
 }
+
+// PUT and DELETE methods removed - managed by admin panel
+// Admin panel should use the /api/revalidate endpoint after making changes

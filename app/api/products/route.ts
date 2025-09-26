@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
+import { revalidatePath } from 'next/cache'
 import { v4 as uuidv4 } from 'uuid'
 
 export async function GET(request: NextRequest) {
@@ -64,37 +65,14 @@ export async function GET(request: NextRequest) {
       createdAt: product.created_at
     }))
 
-    return NextResponse.json({ products, total: products.length })
+    const res = NextResponse.json({ products, total: products.length })
+    res.headers.set('Cache-Control', 'no-store')
+    return res
   } catch (error) {
     console.error('GET /api/products error:', error)
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
   }
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { name, description, price, stock = 0, image_url, category_id } = body
-
-    if (!name || !price) {
-      return NextResponse.json({ error: 'Name and price are required' }, { status: 400 })
-    }
-
-    const id = uuidv4()
-
-    const result = await query(
-      'INSERT INTO products (id, name, description, price, stock, image_url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [id, name, description, price, stock, image_url]
-    )
-
-    const product = {
-      ...result.rows[0],
-      price: parseFloat(result.rows[0].price)
-    }
-
-    return NextResponse.json({ product }, { status: 201 })
-  } catch (error) {
-    console.error('POST /api/products error:', error)
-    return NextResponse.json({ error: 'Failed to create product' }, { status: 500 })
-  }
-}
+// POST, PUT, DELETE methods removed - managed by admin panel
+// Admin panel should use the /api/revalidate endpoint after making changes

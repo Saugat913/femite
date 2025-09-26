@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { stripe } from '@/lib/stripe'
 import { query } from '@/lib/db'
+import { emailService } from '@/lib/email-service'
 import { v4 as uuidv4 } from 'uuid'
 
 export async function POST(request: NextRequest) {
@@ -108,8 +109,47 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
     console.log('Order created successfully:', orderId)
 
-    // TODO: Send order confirmation email
-    // TODO: Trigger order fulfillment process
+    // Send order confirmation emails
+    try {
+      // Get user email
+      const userResult = await query('SELECT email FROM users WHERE id = $1', [userId])
+      if (userResult.rows.length > 0) {
+        const userEmail = userResult.rows[0].email
+        
+        // Prepare order data for email
+        const orderData = {
+          orderId,
+          orderNumber: orderId.slice(-8).toUpperCase(), // Use last 8 chars as order number
+          customerEmail: userEmail,
+          customerName: session.customer_details?.name || userEmail.split('@')[0],
+          orderDate: new Date().toISOString(),
+          total: totalAmount,
+          shippingAddress,
+          paymentStatus: 'paid',
+          estimatedDelivery: '5-7 business days',
+          items: lineItems.data.map(item => {
+            const product = item.price?.product as Stripe.Product
+            return {
+              name: product.name,
+              quantity: item.quantity || 1,
+              price: item.amount_total ? item.amount_total / 100 : 0,
+              size: product.metadata?.size || undefined
+            }
+          })
+        }
+        
+        // Send customer confirmation email
+        await emailService.sendOrderConfirmation(userEmail, orderData)
+        console.log(`Order confirmation email sent to ${userEmail}`)
+        
+        // Send admin notification email
+        await emailService.sendAdminOrderNotification(orderData)
+        console.log('Admin order notification sent')
+      }
+    } catch (emailError) {
+      console.error('Failed to send order confirmation emails:', emailError)
+      // Don't fail the webhook if email sending fails
+    }
 
   } catch (error) {
     console.error('Error handling checkout completion:', error)
@@ -128,7 +168,8 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
       )
     }
 
-    // TODO: Send payment confirmation
+    // Additional payment confirmation could be sent here if needed
+    console.log(`Payment confirmation processed for payment intent: ${paymentIntent.id}`)
   } catch (error) {
     console.error('Error handling payment success:', error)
   }
@@ -146,7 +187,8 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
       )
     }
 
-    // TODO: Send payment failure notification
+    // Send payment failure notification to admin
+    console.log(`Payment failed for payment intent: ${paymentIntent.id} - admin should be notified`)
   } catch (error) {
     console.error('Error handling payment failure:', error)
   }

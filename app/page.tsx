@@ -5,6 +5,9 @@ import Layout from '@/components/Layout'
 import ProductCard from '@/components/ProductCard'
 import { productService } from '@/services/product-service'
 
+// Use ISR with revalidation for optimal performance
+export const revalidate = 300 // Revalidate every 5 minutes
+
 export default async function Home() {
   const { products: featuredProducts } = await productService.getProducts({ limit: 6 })
 
