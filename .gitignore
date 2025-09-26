@@ -183,3 +183,7 @@ secrets/
 .cache/
 .temp/
 .tmp/
+
+# Documentation and analysis
+docs/
+analyze
