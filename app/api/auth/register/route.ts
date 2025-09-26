@@ -60,23 +60,19 @@ export async function POST(request: NextRequest) {
       // Continue with registration even if email fails
     }
 
-    // Create session (but user will need to verify email)
-    await createSession(user.id, user.role)
+    // Don't create session - user must verify email first
     
-    // Generate JWT token for API compatibility
-    const token = await encrypt({
-      id: user.id,
-      email: user.email,
-      role: user.role
-    })
-
     return NextResponse.json({
       success: true,
       data: {
-        user,
-        token
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          createdAt: user.created_at
+        }
       },
-      message: 'Registration successful! Please check your email to verify your account.',
+      message: 'Registration successful! Please check your email to verify your account before logging in.',
       requiresEmailVerification: true
     }, { status: 201 })
   } catch (error) {

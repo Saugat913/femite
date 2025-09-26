@@ -15,29 +15,81 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [emailNotVerified, setEmailNotVerified] = useState(false)
+  const [resendingVerification, setResendingVerification] = useState(false)
   const { login } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
 
   useEffect(() => {
     const message = searchParams.get('message')
+    const emailParam = searchParams.get('email')
+    
     if (message === 'password-reset-success') {
       setSuccessMessage('Your password has been reset successfully. Please sign in with your new password.')
+    } else if (message === 'registration-success') {
+      setSuccessMessage('Registration successful! Please verify your email address before logging in. Check your inbox for a verification email.')
+      if (emailParam) {
+        setEmail(decodeURIComponent(emailParam))
+      }
     }
   }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setEmailNotVerified(false)
     setLoading(true)
 
     try {
       await login(email, password)
       router.push('/account') // Redirect to account page after successful login
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      const errorMessage = err instanceof Error ? err.message : 'Login failed'
+      
+      // Check if it's an email verification error
+      if (errorMessage.includes('Email not verified') || errorMessage.includes('verify your email')) {
+        setEmailNotVerified(true)
+        setError('Please verify your email address before logging in. Check your inbox for a verification email.')
+      } else {
+        setError(errorMessage)
+      }
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      setError('Please enter your email address first.')
+      return
+    }
+
+    setResendingVerification(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSuccessMessage('Verification email sent! Please check your inbox and spam folder.')
+        setEmailNotVerified(false)
+        setError('')
+      } else {
+        setError(data.message || data.error || 'Failed to send verification email')
+      }
+    } catch (error) {
+      setError('Network error. Please try again.')
+    } finally {
+      setResendingVerification(false)
     }
   }
 
@@ -69,11 +121,30 @@ export default function Login() {
               )}
 
               {error && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start space-x-3 mb-6">
-                  <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div className={`p-4 border rounded-lg flex items-start space-x-3 mb-6 ${
+                  emailNotVerified ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200'
+                }`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                    emailNotVerified ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}>
                     <span className="text-white text-xs font-bold">!</span>
                   </div>
-                  <p className="text-red-700 text-sm">{error}</p>
+                  <div className="flex-1">
+                    <p className={`text-sm ${
+                      emailNotVerified ? 'text-yellow-700' : 'text-red-700'
+                    }`}>{error}</p>
+                    {emailNotVerified && (
+                      <div className="mt-3">
+                        <button
+                          onClick={handleResendVerification}
+                          disabled={resendingVerification}
+                          className="text-sm font-medium text-hemp-green-dark hover:text-hemp-green-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {resendingVerification ? 'Sending...' : 'Resend verification email'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 

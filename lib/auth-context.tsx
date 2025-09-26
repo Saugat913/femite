@@ -104,15 +104,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(data.error || 'Registration failed')
     }
 
-    if (data.success && data.data) {
-      setUser({
-        id: data.data.user.id,
-        email: data.data.user.email,
-        role: data.data.user.role,
-        name: data.data.user.email.split('@')[0],
-        createdAt: data.data.user.createdAt
-      })
-    }
+    // Don't set user state - they need to verify email first
+    // Return the data so the component can handle the success message
+    return data
   }
 
   const logout = async () => {

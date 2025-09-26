@@ -24,6 +24,15 @@ export async function POST(request: NextRequest) {
 
     const user = result.rows[0]
 
+    // Check if email is verified
+    if (!user.email_verified) {
+      return NextResponse.json({ 
+        error: 'Email not verified', 
+        code: 'EMAIL_NOT_VERIFIED',
+        message: 'Please verify your email address before logging in. Check your inbox for a verification email.' 
+      }, { status: 403 })
+    }
+
     // Verify password
     const isValidPassword = await comparePasswords(password, user.password_hash)
 

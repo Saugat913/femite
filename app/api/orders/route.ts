@@ -117,11 +117,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user's cart
+    // Get user's cart and customer email
     const cartResult = await client.query(
       'SELECT id FROM carts WHERE user_id = $1',
       [session.userId]
     )
+
+    // Get customer email
+    const userResult = await client.query(
+      'SELECT email FROM users WHERE id = $1',
+      [session.userId]
+    )
+    const customerEmail = userResult.rows[0]?.email
 
     if (cartResult.rows.length === 0) {
       await client.query('ROLLBACK')
@@ -218,6 +225,26 @@ export async function POST(request: NextRequest) {
     `, [orderId])
 
     const order = newOrderResult.rows[0]
+
+    // Send admin notification (don't block order creation if email fails)
+    try {
+      const { emailService } = await import('@/lib/email-service')
+      await emailService.sendAdminOrderNotification({
+        orderId: order.id,
+        orderNumber: order.id.slice(0, 8), // Use first 8 chars as order number
+        total: parseFloat(order.total),
+        customerEmail,
+        items: cartItems.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: parseFloat(item.price)
+        }))
+      })
+      console.log('Admin notification sent for order:', order.id)
+    } catch (error) {
+      console.error('Failed to send admin notification for order:', order.id, error)
+      // Don't fail the order creation if email fails
+    }
 
     return NextResponse.json({
       success: true,

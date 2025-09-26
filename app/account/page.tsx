@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { User, Package, MapPin, CreditCard, Edit, Eye, Truck, LogIn, Plus, Trash2, Star } from 'lucide-react'
+import { User, Package, MapPin, CreditCard, Edit, Eye, Truck, LogIn, Plus, Trash2, Star, Calendar, DollarSign } from 'lucide-react'
 import Layout from '@/components/Layout'
 import AddressForm from '@/components/AddressForm'
 import { useAuth } from '@/lib/auth-context'
@@ -22,6 +22,12 @@ export default function AccountPage() {
   const [addressesError, setAddressesError] = useState('')
   const [showAddressForm, setShowAddressForm] = useState(false)
   const [editingAddress, setEditingAddress] = useState<Address | null>(null)
+
+  // State for orders management
+  const [orders, setOrders] = useState<any[]>([])
+  const [ordersLoading, setOrdersLoading] = useState(false)
+  const [ordersError, setOrdersError] = useState('')
+  const [ordersPage, setOrdersPage] = useState(1)
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -73,12 +79,45 @@ export default function AccountPage() {
     }
   }
 
+  // Fetch user orders
+  const fetchOrders = async () => {
+    if (!isAuthenticated) return
+    
+    setOrdersLoading(true)
+    setOrdersError('')
+    
+    try {
+      const response = await fetch(`/api/orders?page=${ordersPage}&limit=10`, {
+        credentials: 'include',
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setOrders(data.data.orders)
+        } else {
+          setOrdersError('Failed to load orders')
+        }
+      } else {
+        setOrdersError('Failed to load orders')
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error)
+      setOrdersError('Failed to load orders')
+    } finally {
+      setOrdersLoading(false)
+    }
+  }
+
   // Load addresses when user is authenticated
   useEffect(() => {
     if (isAuthenticated && activeTab === 'addresses') {
       fetchAddresses()
     }
-  }, [isAuthenticated, activeTab])
+    if (isAuthenticated && activeTab === 'orders') {
+      fetchOrders()
+    }
+  }, [isAuthenticated, activeTab, ordersPage])
 
   // Show loading state
   if (loading) {
@@ -145,7 +184,7 @@ export default function AccountPage() {
         {/* Mobile Tab Navigation */}
         <div className="lg:hidden mb-6">
           <div className="bg-white rounded-xl shadow-sm p-2">
-            <div className="grid grid-cols-2 gap-1">
+            <div className="grid grid-cols-3 gap-1">
               <button
                 onClick={() => setActiveTab('account')}
                 className={`px-3 py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center ${
@@ -156,6 +195,17 @@ export default function AccountPage() {
               >
                 <User className="w-4 h-4 mr-2" />
                 Account
+              </button>
+              <button
+                onClick={() => setActiveTab('orders')}
+                className={`px-3 py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center ${
+                  activeTab === 'orders' 
+                    ? 'bg-hemp-green-dark text-white shadow-sm' 
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <Package className="w-4 h-4 mr-2" />
+                Orders
               </button>
               <button
                 onClick={() => setActiveTab('addresses')}
@@ -195,6 +245,16 @@ export default function AccountPage() {
                 >
                   <User className="w-5 h-5 mr-3" />
                   Account Details
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('orders')}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
+                    activeTab === 'orders' ? 'bg-hemp-green-light text-hemp-green-dark' : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <Package className="w-5 h-5 mr-3" />
+                  My Orders
                 </button>
                 
                 <button

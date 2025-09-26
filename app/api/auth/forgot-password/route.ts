@@ -30,12 +30,21 @@ export async function POST(request: NextRequest) {
         exp: Math.floor(Date.now() / 1000) + (60 * 60) // 1 hour
       })
 
-      // In a real app, you would send an email here
-      // For now, we'll just log it (for development)
-      console.log('Password reset token for', email, ':', resetToken)
-      
-      // TODO: Send email with reset link
-      // await sendPasswordResetEmail(email, resetToken)
+      // Send password reset email
+      try {
+        const { emailService } = await import('@/lib/email-service')
+        const emailSent = await emailService.sendPasswordResetEmail(email, resetToken)
+        
+        if (!emailSent) {
+          console.error('Failed to send password reset email to:', email)
+          // Still return success to prevent email enumeration attacks
+        } else {
+          console.log('Password reset email sent successfully to:', email)
+        }
+      } catch (error) {
+        console.error('Error sending password reset email:', error)
+        // Still return success to prevent email enumeration attacks
+      }
     }
 
     return NextResponse.json({
