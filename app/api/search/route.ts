@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query, getClient } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 
+// Force dynamic rendering - prevent static generation
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 interface SearchFilters {
   category?: string
   minPrice?: number

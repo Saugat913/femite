@@ -4,6 +4,11 @@ const nextConfig = {
   // output: process.env.BUILD_MODE === 'export' ? 'export' : undefined,
   trailingSlash: true,
   
+  // Disable static generation for pages that require client-side rendering
+  experimental: {
+    missingSuspenseWithCSRBailout: false,
+  },
+  
   images: {
     // Enable optimized images for better performance
     unoptimized: false,

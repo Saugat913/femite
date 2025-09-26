@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
-import { createCheckoutSession, formatPriceForStripe } from '@/lib/stripe'
 import { query } from '@/lib/db'
+import Stripe from 'stripe'
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+  apiVersion: '2025-08-27.basil',
+})
+
+// Force dynamic rendering - prevent static generation
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+const formatPriceForStripe = (price: number) => Math.round(price * 100)
 
 interface CheckoutItem {
   id: string
@@ -54,7 +64,7 @@ export async function POST(request: NextRequest) {
     const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
     // Create Stripe checkout session
-    const checkoutSession = await createCheckoutSession({
+    const checkoutSession = await stripe.checkout.sessions.create({
       customer_email: userEmail,
       line_items: lineItems,
       mode: 'payment',

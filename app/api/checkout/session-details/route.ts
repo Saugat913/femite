@@ -3,6 +3,10 @@ import { getSession } from '@/lib/auth'
 import { stripe } from '@/lib/stripe'
 import { query } from '@/lib/db'
 
+// Force dynamic rendering - prevent static generation
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
