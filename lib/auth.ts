@@ -38,21 +38,29 @@ export async function getSession() {
   const cookieStore = cookies()
   const session = cookieStore.get('session')?.value
   
+  console.log('Auth: Getting session, cookie exists:', !!session)
+  
   if (!session) return null
   
   try {
     const payload = await decrypt(session)
+    console.log('Auth: Decrypted session payload:', { userId: payload.userId, expires: payload.expires })
     
     // Check if session has custom expires field and validate it
     if (payload.expires) {
       const expiresDate = new Date(payload.expires)
-      if (expiresDate <= new Date()) {
+      const now = new Date()
+      console.log('Auth: Session expires:', expiresDate, 'Current time:', now)
+      
+      if (expiresDate <= now) {
+        console.log('Auth: Session has expired, deleting')
         // Session has expired, delete the cookie
         deleteSession()
         return null
       }
     }
     
+    console.log('Auth: Session is valid, returning payload')
     return payload
   } catch (error) {
     console.error('Session validation error:', error)
@@ -113,31 +121,47 @@ export async function createSession(userId: string, role: string, sessionId?: st
   const session = await encrypt({ 
     userId, 
     role, 
-    expires, 
+    expires: expires.toISOString(), // Store as ISO string for consistency
     sessionId: currentSessionId,
     issuedAt: new Date().toISOString()
   })
   
-  const cookieStore = cookies()
-  cookieStore.set('session', session, {
-    expires,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax', // Better compatibility for production
-    path: '/',
-  })
+  console.log('Auth: Creating session with data:', { userId, role, expires })
   
-  // Set CSRF token cookie
-  const csrfToken = generateSessionId()
-  cookieStore.set('csrf-token', csrfToken, {
-    expires,
-    httpOnly: false, // Needs to be readable by frontend
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-  })
-  
-  return { sessionId: currentSessionId, csrfToken }
+  try {
+    const cookieStore = cookies()
+    
+    // Set session cookie with proper settings for development
+    cookieStore.set('session', session, {
+      expires,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      // Add maxAge for better browser compatibility
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+    })
+    
+    console.log('Auth: Session cookie set successfully')
+    
+    // Set CSRF token cookie
+    const csrfToken = generateSessionId()
+    cookieStore.set('csrf-token', csrfToken, {
+      expires,
+      httpOnly: false, // Needs to be readable by frontend
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 24 * 60 * 60 * 1000
+    })
+    
+    console.log('Auth: CSRF token cookie set successfully')
+    
+    return { sessionId: currentSessionId, csrfToken, sessionToken: session }
+  } catch (error) {
+    console.error('Auth: Error setting cookies:', error)
+    return { sessionId: currentSessionId, csrfToken: '', sessionToken: session }
+  }
 }
 
 // Refresh session if it's close to expiration

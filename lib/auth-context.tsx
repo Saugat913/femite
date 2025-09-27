@@ -48,18 +48,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await fetch('/api/auth/profile', {
         method: 'GET',
         credentials: 'include', // Include cookies
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
       })
-
+      
       if (response.ok) {
         const data = await response.json()
         if (data.success && data.data) {
-          setUser({
+          const userData = {
             id: data.data.id,
             email: data.data.email,
             role: data.data.role,
             name: data.data.email.split('@')[0], // Use email username as name
             createdAt: data.data.createdAt
-          })
+          }
+          setUser(userData)
         } else {
           setUser(null)
         }
@@ -91,13 +96,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (data.success && data.data) {
-      setUser({
+      const userData = {
         id: data.data.user.id,
         email: data.data.user.email,
         role: data.data.user.role,
         name: data.data.user.email.split('@')[0],
         createdAt: data.data.user.createdAt
-      })
+      }
+      setUser(userData)
+      
+      // Force a re-check after successful login to ensure consistency
+      setTimeout(() => {
+        checkAuth()
+      }, 100)
     }
   }
 

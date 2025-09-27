@@ -8,22 +8,30 @@ export const revalidate = 0
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('Profile API: Getting session...')
     const session = await getSession()
+    console.log('Profile API: Session result:', session)
     
     if (!session || !session.userId) {
+      console.log('Profile API: No valid session found')
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
+    console.log('Profile API: Valid session found, fetching user data for userId:', session.userId)
+    
     // Get user profile
     const result = await query(
       'SELECT id, email, role, created_at FROM users WHERE id = $1',
       [session.userId]
     )
 
+    console.log('Profile API: Database query result rows:', result.rows.length)
+
     if (result.rows.length === 0) {
+      console.log('Profile API: User not found in database')
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -31,6 +39,7 @@ export async function GET(request: NextRequest) {
     }
 
     const user = result.rows[0]
+    console.log('Profile API: Returning user data:', { id: user.id, email: user.email })
 
     return NextResponse.json({
       success: true,
