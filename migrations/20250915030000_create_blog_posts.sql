@@ -25,12 +25,15 @@ CREATE INDEX IF NOT EXISTS idx_blog_posts_published ON blog_posts(is_published, 
 -- Create index on category
 CREATE INDEX IF NOT EXISTS idx_blog_posts_category ON blog_posts(category);
 
--- Insert sample blog posts
-INSERT INTO blog_posts (title, excerpt, content, image_url, category, slug, published_at, is_published, meta_title, meta_description) VALUES 
-(
-    'Why Hemp is the Future of Sustainable Fashion',
-    'Learn about the incredible benefits of hemp fabric and why it''s a game-changer for the fashion industry.',
-    '<p>Hemp is rapidly emerging as one of the most promising materials in sustainable fashion. Unlike conventional cotton, hemp requires significantly less water to grow and actually improves soil health through its cultivation process.</p>
+-- Insert sample blog posts (only if they don't exist)
+DO $$
+BEGIN
+    -- Insert first blog post
+    IF NOT EXISTS (SELECT 1 FROM blog_posts WHERE slug = 'hemp-future-sustainable-fashion') THEN
+        INSERT INTO blog_posts (title, excerpt, content, image_url, category, slug, published_at, is_published, meta_title, meta_description) VALUES (
+            'Why Hemp is the Future of Sustainable Fashion',
+            'Learn about the incredible benefits of hemp fabric and why it''s a game-changer for the fashion industry.',
+            '<p>Hemp is rapidly emerging as one of the most promising materials in sustainable fashion. Unlike conventional cotton, hemp requires significantly less water to grow and actually improves soil health through its cultivation process.</p>
 
 <h2>The Environmental Benefits</h2>
 <p>Hemp plants absorb more CO2 per hectare than many trees and forests, making them a carbon-negative crop. They also require no pesticides or herbicides to grow successfully, reducing the environmental impact of farming.</p>

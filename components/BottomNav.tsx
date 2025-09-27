@@ -3,11 +3,11 @@
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Home, Store, ShoppingBag, User, Heart } from 'lucide-react'
-import { useCart } from '@/lib/cart-context'
+import { useServerCart } from '@/lib/use-server-cart'
 
 export default function BottomNav() {
   const pathname = usePathname()
-  const { itemCount } = useCart()
+  const { itemCount } = useServerCart()
 
   const navItems = [
     {

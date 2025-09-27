@@ -5,14 +5,14 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ShoppingCart, Eye } from 'lucide-react'
 import { Product } from '@/types'
-import { useCart } from '@/lib/cart-context'
+import { useServerCart } from '@/lib/use-server-cart'
 
 interface ProductCardProps {
   product: Product
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { addItem } = useCart()
+  const { addItem } = useServerCart()
   const [isAdding, setIsAdding] = useState(false)
 
   const handleQuickAdd = (e: React.MouseEvent) => {

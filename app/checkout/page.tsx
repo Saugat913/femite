@@ -6,7 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, CreditCard, Lock, Loader2 } from 'lucide-react'
 import Layout from '@/components/Layout'
-import { useCart } from '@/lib/cart-context'
+import { useServerCart } from '@/lib/use-server-cart'
 import { useAuth } from '@/lib/auth-context'
 
 interface FormData {
@@ -31,7 +31,7 @@ interface FormData {
 }
 
 export default function CheckoutPage() {
-  const { items, total, itemCount } = useCart()
+  const { items, total, clearCart, itemCount, loading: cartLoading } = useServerCart()
   const { user, isAuthenticated, loading: authLoading } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)

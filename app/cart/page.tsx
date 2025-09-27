@@ -4,10 +4,20 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Trash2, Plus, Minus, X, ArrowRight, ShoppingBag } from 'lucide-react'
 import Layout from '@/components/Layout'
-import { useCart } from '@/lib/cart-context'
+import { useServerCart } from '@/lib/use-server-cart'
 
 export default function Cart() {
-  const { items, total, removeItem, updateQuantity, itemCount, clearCart } = useCart()
+  const { items, total, removeItem, updateQuantity, itemCount, clearCart, loading } = useServerCart()
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-6 py-20 text-center">
+          <div className="text-hemp-green-dark">Loading cart...</div>
+        </div>
+      </Layout>
+    )
+  }
 
   if (items.length === 0) {
     return (

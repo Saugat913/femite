@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle, Package, ArrowRight, Home } from 'lucide-react'
 import Layout from '@/components/Layout'
-import { useCart } from '@/lib/cart-context'
+import { useServerCart } from '@/lib/use-server-cart'
 
 interface OrderDetails {
   id: string
@@ -16,7 +16,7 @@ interface OrderDetails {
 
 export default function CheckoutSuccessPage() {
   const searchParams = useSearchParams()
-  const { clearCart } = useCart()
+  const { clearCart } = useServerCart()
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

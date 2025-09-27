@@ -4,7 +4,7 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { path, paths, tag, tags, secret, type, id } = body
+    const { path, paths, tag, tags, secret, type, id, imageUpdate, timestamp } = body
 
     // Verify the secret to prevent unauthorized revalidation
     if (!secret || secret !== process.env.REVALIDATION_SECRET) {
@@ -12,8 +12,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid or missing secret' }, { status: 401 })
     }
 
+    // Log enhanced revalidation request
+    console.log(`🔄 Enhanced revalidation request: type=${type}, id=${id}, imageUpdate=${imageUpdate}, timestamp=${timestamp}`)
+
     const revalidatedPaths: string[] = []
     const revalidatedTags: string[] = []
+    let imagesCacheBusted = false
+    
+    // Get configurable revalidation interval
+    const revalidationInterval = parseInt(process.env.REVALIDATION_INTERVAL || '0') // 0 = immediate
 
     // Handle multiple paths
     if (paths && Array.isArray(paths)) {
@@ -58,10 +65,24 @@ export async function POST(request: NextRequest) {
           if (id) {
             productPaths.push(`/shop/${id}`)
           }
+          
+          // Enhanced revalidation with cache control
           for (const p of productPaths) {
-            revalidatePath(p)
+            revalidatePath(p, 'page') // Specify type for better cache control
             revalidatedPaths.push(p)
-            console.log(`Revalidated product path: ${p}`)
+            console.log(`Revalidated product path: ${p}${imageUpdate ? ' (with image cache busting)' : ''}`)
+          }
+          
+          // If this is an image update, also revalidate image cache
+          if (imageUpdate && id) {
+            // Revalidate Next.js image cache by using tags
+            const imageTags = [`product-image-${id}`, `product-${id}`]
+            for (const imageTag of imageTags) {
+              revalidateTag(imageTag)
+              revalidatedTags.push(imageTag)
+            }
+            imagesCacheBusted = true
+            console.log(`🖼️ Cache busted product images for product ${id}`)
           }
           break
         
@@ -104,6 +125,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Apply revalidation interval if configured
+    if (revalidationInterval > 0) {
+      console.log(`⏱️ Applying revalidation interval: ${revalidationInterval}ms`)
+      await new Promise(resolve => setTimeout(resolve, revalidationInterval))
+    }
+
     return NextResponse.json({ 
       success: true,
       revalidated: true, 
@@ -111,7 +138,10 @@ export async function POST(request: NextRequest) {
       paths: revalidatedPaths,
       tags: revalidatedTags,
       type: type || null,
-      id: id || null
+      id: id || null,
+      imagesCacheBusted,
+      revalidationInterval,
+      message: `Revalidated ${revalidatedPaths.length} paths${revalidatedTags.length ? ` and ${revalidatedTags.length} tags` : ''}${imageUpdate ? ' with image cache busting' : ''}`
     })
   } catch (error) {
     console.error('Revalidation error:', error)

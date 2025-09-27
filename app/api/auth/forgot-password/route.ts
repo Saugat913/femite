@@ -20,11 +20,12 @@ export async function POST(request: NextRequest) {
 
     // Always return success to prevent email enumeration attacks
     // but only send email if user exists
+    let resetToken: string | null = null
     if (result.rows.length > 0) {
       const user = result.rows[0]
       
       // Generate password reset token (valid for 1 hour)
-      const resetToken = await encrypt({
+      resetToken = await encrypt({
         userId: user.id,
         type: 'password_reset',
         exp: Math.floor(Date.now() / 1000) + (60 * 60) // 1 hour
@@ -47,10 +48,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
+    const response = {
       success: true,
       message: 'If an account with this email exists, we have sent a password reset link.'
-    })
+    }
+
+    // In development, also return the reset URL for testing
+    if (process.env.NODE_ENV === 'development' && resetToken) {
+      const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`
+      // @ts-ignore
+      response.resetUrl = resetUrl
+      console.log('Development reset URL:', resetUrl)
+    }
+
+    return NextResponse.json(response)
   } catch (error) {
     console.error('POST /api/auth/forgot-password error:', error)
     return NextResponse.json({ error: 'Failed to process request' }, { status: 500 })

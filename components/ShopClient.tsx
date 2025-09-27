@@ -8,9 +8,10 @@ import type { Product } from '@/types'
 interface ShopClientProps {
   initialProducts: Product[]
   categories: string[]
+  initialSearchQuery?: string
 }
 
-export default function ShopClient({ initialProducts, categories }: ShopClientProps) {
+export default function ShopClient({ initialProducts, categories, initialSearchQuery }: ShopClientProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('All')
 
   const displayProducts = selectedCategory === 'All' 
@@ -52,11 +53,20 @@ export default function ShopClient({ initialProducts, categories }: ShopClientPr
 
       {/* Products Grid */}
       <div className="lg:col-span-3">
-        {/* Results Count */}
-        <div className="flex justify-between items-center mb-6">
-          <p className="text-gray-600 font-medium">
-            Showing <span className="font-semibold text-hemp-green-dark">{displayProducts.length}</span> of <span className="font-semibold">{initialProducts.length}</span> products
-          </p>
+        {/* Results Count and Search Info */}
+        <div className="flex flex-col gap-3 mb-6">
+          {initialSearchQuery && (
+            <div className="bg-hemp-green-light/20 border border-hemp-green-light rounded-lg p-3">
+              <p className="text-hemp-text font-medium">
+                Search results for: <span className="font-bold text-hemp-green-dark">"{initialSearchQuery}"</span>
+              </p>
+            </div>
+          )}
+          <div className="flex justify-between items-center">
+            <p className="text-gray-600 font-medium">
+              Showing <span className="font-semibold text-hemp-green-dark">{displayProducts.length}</span> of <span className="font-semibold">{initialProducts.length}</span> products
+            </p>
+          </div>
         </div>
 
         {/* Products Grid */}

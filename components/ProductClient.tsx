@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useCart } from '@/lib/cart-context'
+import { useServerCart } from '@/lib/use-server-cart'
 import { cartService } from '@/services/cart-service'
 import { ShoppingCart, Check, Plus, Minus, Heart, Zap } from 'lucide-react'
 import type { Product } from '@/types'
@@ -13,7 +13,7 @@ interface ProductClientProps {
 
 export default function ProductClient({ product }: ProductClientProps) {
   const router = useRouter()
-  const { addItem } = useCart()
+  const { addItem } = useServerCart()
   
   const [selectedSize, setSelectedSize] = useState('')
   const [selectedColor, setSelectedColor] = useState('')

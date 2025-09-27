@@ -2,12 +2,8 @@
 const nextConfig = {
   // Enable SSG export conditionally (commented out to enable dynamic rendering)
   // output: process.env.BUILD_MODE === 'export' ? 'export' : undefined,
-  trailingSlash: true,
+  // trailingSlash: true,
   
-  // Disable static generation for pages that require client-side rendering
-  experimental: {
-    missingSuspenseWithCSRBailout: false,
-  },
   
   images: {
     // Enable optimized images for better performance
@@ -28,6 +24,12 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'media.istockphoto.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
         port: '',
         pathname: '/**',
       },

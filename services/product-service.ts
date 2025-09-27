@@ -18,6 +18,27 @@ export class ProductService {
   // Smart service - uses direct DB for SSR, API for CSR
   private useApi = typeof window !== 'undefined'
 
+  // Helper to get a valid image URL
+  private getValidImageUrl(imageUrl: string | null): string {
+    if (!imageUrl) return '/placeholder-image.jpg'
+    
+    // List of known broken image URLs to replace
+    const brokenUrls = [
+      'https://images.unsplash.com/photo-1506629905607-45e135278531',
+      'photo-1506629905607-45e135278531' // partial match
+    ]
+    
+    // Check if the image URL is broken
+    const isBroken = brokenUrls.some(broken => imageUrl.includes(broken))
+    
+    if (isBroken) {
+      // Replace with a working hemp/clothing image
+      return 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&h=300&fit=crop&crop=center'
+    }
+    
+    return imageUrl
+  }
+
   // Format database products for frontend
   private formatProduct(product: any): Product {
     return {
@@ -26,7 +47,7 @@ export class ProductService {
       description: product.description,
       price: parseFloat(product.price),
       stock: product.stock,
-      image: product.image_url || product.image,
+      image: this.getValidImageUrl(product.image_url || product.image),
       category: product.categories ? product.categories.split(', ')[0] || 'Uncategorized' : 'Uncategorized',
       sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
       colors: ['Natural', 'Forest Green', 'Earth Brown', 'Sage Green', 'Charcoal'],
@@ -91,7 +112,7 @@ export class ProductService {
       queryText += ` LIMIT $${queryParams.length - 1} OFFSET $${queryParams.length}`
 
       const result = await query(queryText, queryParams)
-      const products = result.rows.map(this.formatProduct)
+      const products = result.rows.map(row => this.formatProduct(row))
 
       return {
         products,

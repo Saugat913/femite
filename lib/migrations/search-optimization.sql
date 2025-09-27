@@ -1,6 +1,9 @@
 -- Search optimization migration for Hemp Fashion E-commerce
 -- This migration adds full-text search indexes and search analytics tables
 
+-- Enable pg_trgm extension for trigram matching (for autocomplete)
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 -- Add full-text search column to products table
 ALTER TABLE products ADD COLUMN IF NOT EXISTS search_vector tsvector;
 
@@ -10,8 +13,7 @@ RETURNS TRIGGER AS $$
 BEGIN
   NEW.search_vector := 
     setweight(to_tsvector('english', COALESCE(NEW.name, '')), 'A') ||
-    setweight(to_tsvector('english', COALESCE(NEW.description, '')), 'B') ||
-    setweight(to_tsvector('english', COALESCE(NEW.brand, '')), 'C');
+    setweight(to_tsvector('english', COALESCE(NEW.description, '')), 'B');
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -35,9 +37,6 @@ CREATE INDEX IF NOT EXISTS idx_products_price ON products (price);
 CREATE INDEX IF NOT EXISTS idx_products_stock ON products (stock);
 CREATE INDEX IF NOT EXISTS idx_products_created_at ON products (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_products_name_trgm ON products USING GIN (name gin_trgm_ops);
-
--- Enable pg_trgm extension for trigram matching (for autocomplete)
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 -- Create search analytics table
 CREATE TABLE IF NOT EXISTS search_queries (

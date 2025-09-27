@@ -106,7 +106,7 @@ export class BlogService {
       
       const url = `/api/blog${params.toString() ? '?' + params.toString() : ''}`
       const data = await this.getFromAPI(url)
-      return data.blogPosts || []
+      return data.posts || []
     } catch (error) {
       console.error('Error fetching blog posts:', error)
       return []

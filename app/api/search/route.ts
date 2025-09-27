@@ -212,6 +212,27 @@ async function performAdvancedSearch(options: SearchOptions) {
   queryParams.push(limit, offset)
   const result = await query(selectQuery, queryParams)
 
+  // Helper to get valid image URL
+  const getValidImageUrl = (imageUrl: string | null): string => {
+    if (!imageUrl) return '/placeholder-image.jpg'
+    
+    // List of known broken image URLs to replace
+    const brokenUrls = [
+      'https://images.unsplash.com/photo-1506629905607-45e135278531',
+      'photo-1506629905607-45e135278531' // partial match
+    ]
+    
+    // Check if the image URL is broken
+    const isBroken = brokenUrls.some(broken => imageUrl.includes(broken))
+    
+    if (isBroken) {
+      // Replace with a working hemp/clothing image
+      return 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&h=300&fit=crop&crop=center'
+    }
+    
+    return imageUrl
+  }
+
   // Format products
   const products = result.rows.map(row => ({
     id: row.id,
@@ -219,7 +240,7 @@ async function performAdvancedSearch(options: SearchOptions) {
     description: row.description,
     price: parseFloat(row.price),
     stock: row.stock,
-    image: row.image_url,
+    image: getValidImageUrl(row.image_url),
     category: row.categories.split(', ')[0] || 'Uncategorized',
     categories: row.categories.split(', '),
     attributes: row.attributes || [],

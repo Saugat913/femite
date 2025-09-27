@@ -142,8 +142,15 @@ export function ServerCartProvider({ children }: { children: ReactNode }) {
   }
 
   // Remove item from cart
-  const removeItem = async (productId: string) => {
+  const removeItem = async (itemId: string) => {
     if (!isAuthenticated) return
+
+    // Find the product ID from the item ID
+    const item = state.items.find(i => i.id === itemId)
+    if (!item) {
+      setState(prev => ({ ...prev, error: 'Item not found in cart' }))
+      return
+    }
 
     setState(prev => ({ ...prev, loading: true, error: null }))
 
@@ -154,7 +161,7 @@ export function ServerCartProvider({ children }: { children: ReactNode }) {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ productId }),
+        body: JSON.stringify({ productId: item.productId }),
       })
 
       const data = await response.json()
@@ -178,11 +185,18 @@ export function ServerCartProvider({ children }: { children: ReactNode }) {
   }
 
   // Update item quantity
-  const updateQuantity = async (productId: string, quantity: number) => {
+  const updateQuantity = async (itemId: string, quantity: number) => {
     if (!isAuthenticated) return
 
     if (quantity <= 0) {
-      await removeItem(productId)
+      await removeItem(itemId)
+      return
+    }
+
+    // Find the product ID from the item ID
+    const item = state.items.find(i => i.id === itemId)
+    if (!item) {
+      setState(prev => ({ ...prev, error: 'Item not found in cart' }))
       return
     }
 
@@ -195,7 +209,7 @@ export function ServerCartProvider({ children }: { children: ReactNode }) {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ productId, quantity }),
+        body: JSON.stringify({ productId: item.productId, quantity }),
       })
 
       const data = await response.json()

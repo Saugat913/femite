@@ -3,46 +3,59 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Search, User, ShoppingCart, Menu, X, LogOut } from 'lucide-react'
-import { useCart } from '@/lib/cart-context'
+import { useServerCart } from '@/lib/use-server-cart'
 import { useSearch } from '@/lib/search-context'
 import { useAuth } from '@/lib/auth-context'
 
 export default function Header() {
-  const { itemCount } = useCart()
+  const { itemCount } = useServerCart()
   const { search, results, query, clearSearch, isSearching } = useSearch()
   const { user, isAuthenticated, logout, loading } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [searchInput, setSearchInput] = useState('')
+  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
   const userMenuRef = useRef<HTMLDivElement>(null)
   const mobileSearchInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
+
+  // Fetch search suggestions
+  const fetchSuggestions = async (query: string) => {
+    if (!query || query.trim().length < 2) {
+      setSuggestions([])
+      return
+    }
+
+    setLoadingSuggestions(true)
+    try {
+      const response = await fetch(`/api/search/suggestions?q=${encodeURIComponent(query)}&limit=8`)
+      const data = await response.json()
+      if (data.success) {
+        setSuggestions(data.data.suggestions || [])
+      } else {
+        setSuggestions([])
+      }
+    } catch (error) {
+      console.error('Error fetching suggestions:', error)
+      setSuggestions([])
+    } finally {
+      setLoadingSuggestions(false)
+    }
+  }
 
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setSearchInput(value)
     
-    // Add slight delay for mobile to prevent excessive API calls
-    const isMobile = window.innerWidth < 768
-    const delay = 0
-    
-    if (delay > 0) {
-      setTimeout(() => {
-        if (value.trim() && value === searchInput) {
-          search(value)
-        } else if (!value.trim()) {
-          clearSearch()
-        }
-      }, delay)
+    // Fetch suggestions for dropdown
+    if (value.trim()) {
+      fetchSuggestions(value)
     } else {
-      if (value.trim()) {
-        search(value)
-      } else {
-        clearSearch()
-      }
+      setSuggestions([])
     }
   }
 
@@ -151,7 +164,7 @@ export default function Header() {
                     type="button"
                     onClick={() => {
                       setSearchInput('')
-                      clearSearch()
+                      setSuggestions([])
                     }}
                     className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   >
@@ -170,56 +183,82 @@ export default function Header() {
                     <strong>Desktop Debug:</strong> Input: "{searchInput}" | Searching: {isSearching ? 'Yes' : 'No'} | Results: {results.length}
                   </div>
                 )} */}
-                {isSearching ? (
+                {loadingSuggestions ? (
                   <div className="p-6 text-center text-gray-500">
-                    <div className="animate-pulse">Searching...</div>
+                    <div className="animate-pulse">Loading suggestions...</div>
                   </div>
-                ) : results.length > 0 ? (
+                ) : suggestions.length > 0 ? (
                   <>
                     <div className="max-h-80 overflow-y-auto">
-                      {results.slice(0, 6).map((product, index) => (
-                        <Link
-                          key={product.id}
-                          href={`/shop/${product.id}`}
-                          onClick={() => {
-                            setSearchInput('')
-                            clearSearch()
-                          }}
-                          className="flex items-center p-4 hover:bg-hemp-green-light/30 transition-colors border-b border-gray-50 last:border-b-0"
-                        >
-                          <div className="w-16 h-16 bg-hemp-beige rounded-lg overflow-hidden flex-shrink-0 mr-4">
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = 'none';
+                      {suggestions.slice(0, 6).map((suggestion, index) => {
+                        if (suggestion.type === 'product') {
+                          return (
+                            <Link
+                              key={`${suggestion.type}-${suggestion.id}-${index}`}
+                              href={`/shop/${suggestion.id}`}
+                              onClick={() => {
+                                setSearchInput('')
+                                setSuggestions([])
                               }}
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-gray-800 truncate">{product.name}</h3>
-                            <p className="text-sm text-gray-500 mb-1">{product.category}</p>
-                            <p className="text-hemp-green-dark font-bold">${product.price}</p>
-                          </div>
-                        </Link>
-                      ))}
+                              className="flex items-center p-4 hover:bg-hemp-green-light/30 transition-colors border-b border-gray-50 last:border-b-0"
+                            >
+                              <div className="w-16 h-16 bg-hemp-beige rounded-lg overflow-hidden flex-shrink-0 mr-4">
+                                <img
+                                  src={suggestion.image || '/placeholder-image.jpg'}
+                                  alt={suggestion.text}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                  }}
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-gray-800 truncate">{suggestion.text}</h3>
+                                <p className="text-sm text-gray-500 mb-1">Product</p>
+                                <p className="text-hemp-green-dark font-bold">${suggestion.price}</p>
+                              </div>
+                            </Link>
+                          )
+                        } else {
+                          return (
+                            <button
+                              key={`${suggestion.type}-${suggestion.text}-${index}`}
+                              onClick={() => {
+                                setSearchInput(suggestion.text)
+                                router.push(`/shop?search=${encodeURIComponent(suggestion.text)}`)
+                                setSuggestions([])
+                              }}
+                              className="flex items-center p-4 hover:bg-hemp-green-light/30 transition-colors border-b border-gray-50 last:border-b-0 w-full text-left"
+                            >
+                              <div className="w-16 h-16 bg-hemp-beige rounded-lg overflow-hidden flex-shrink-0 mr-4 flex items-center justify-center">
+                                <Search className="h-6 w-6 text-hemp-green-dark" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-gray-800 truncate">{suggestion.text}</h3>
+                                <p className="text-sm text-gray-500">
+                                  {suggestion.type === 'category' ? 'Category' : 
+                                   suggestion.type === 'history' ? 'Previous search' : 'Suggestion'}
+                                  {suggestion.popularity && ` • ${suggestion.popularity} searches`}
+                                </p>
+                              </div>
+                            </button>
+                          )
+                        }
+                      })}
                     </div>
-                    {results.length > 6 && (
-                      <div className="p-4 border-t border-gray-100 bg-gray-50">
-                        <button
-                          onClick={() => {
-                            router.push(`/shop?search=${encodeURIComponent(searchInput)}`)
-                            setSearchInput('')
-                            clearSearch()
-                          }}
-                          className="w-full text-center text-hemp-green-dark hover:text-hemp-green-dark/80 font-semibold py-2 hover:bg-hemp-green-light/20 transition-all"
-                        >
-                          View all {results.length} results →
-                        </button>
-                      </div>
-                    )}
+                    <div className="p-4 border-t border-gray-100 bg-gray-50">
+                      <button
+                        onClick={() => {
+                          router.push(`/shop?search=${encodeURIComponent(searchInput)}`)
+                          setSearchInput('')
+                          setSuggestions([])
+                        }}
+                        className="w-full text-center text-hemp-green-dark hover:text-hemp-green-dark/80 font-semibold py-2 hover:bg-hemp-green-light/20 transition-all"
+                      >
+                        Search for "{searchInput}" →
+                      </button>
+                    </div>
                   </>
                 ) : (
                   <div className="p-6 text-center text-gray-500">
@@ -384,7 +423,7 @@ export default function Header() {
                       type="button"
                       onClick={() => {
                         setSearchInput('')
-                        clearSearch()
+                        setSuggestions([])
                       }}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-200 transition-colors"
                     >
@@ -421,73 +460,94 @@ export default function Header() {
                       <p className="text-hemp-accent text-sm">Try "hemp shirt", "organic", or "sustainable"</p>
                     </div>
                   </div>
-                ) : isSearching ? (
+                ) : loadingSuggestions ? (
                   <div className="text-center py-12">
                     <div className="bg-hemp-green-light/30 border border-hemp-green-medium/50 rounded-xl p-8">
-                      <div className="animate-pulse text-hemp-text text-lg font-semibold">Searching...</div>
-                      <p className="text-hemp-accent text-sm mt-2">Please wait while we find your products</p>
+                      <div className="animate-pulse text-hemp-text text-lg font-semibold">Loading suggestions...</div>
+                      <p className="text-hemp-accent text-sm mt-2">Please wait while we find suggestions</p>
                     </div>
                   </div>
-                ) : results.length > 0 ? (
+                ) : suggestions.length > 0 ? (
                   <div className="space-y-3">
                     <div className="bg-hemp-green-light/20 border border-hemp-green-light rounded-xl p-3 mb-4">
-                      <p className="text-sm text-hemp-text font-semibold text-center">Found {results.length} products</p>
+                      <p className="text-sm text-hemp-text font-semibold text-center">Found {suggestions.length} suggestions</p>
                     </div>
                     <div className="space-y-3">
-                      {results.slice(0, 8).map((product, index) => (
-                        <Link
-                          key={`mobile-${product.id}-${index}`}
-                          href={`/shop/${product.id}`}
-                          onClick={() => {
-                            setIsSearchOpen(false)
-                            setSearchInput('')
-                            clearSearch()
-                          }}
-                          className="mobile-search-result flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:border-hemp-green-medium hover:bg-hemp-green-light/20 transition-all shadow-sm"
-                        >
-                          <div className="w-16 h-16 bg-hemp-beige rounded-lg overflow-hidden flex-shrink-0 mr-4">
-                            {product.image ? (
-                              <img
-                                src={product.image}
-                                alt={product.name}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                  if (target.parentElement) {
-                                    target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-400"><svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div>';
-                                  }
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                <Search className="h-6 w-6" />
+                      {suggestions.slice(0, 8).map((suggestion, index) => {
+                        if (suggestion.type === 'product') {
+                          return (
+                            <Link
+                              key={`mobile-${suggestion.type}-${suggestion.id}-${index}`}
+                              href={`/shop/${suggestion.id}`}
+                              onClick={() => {
+                                setIsSearchOpen(false)
+                                setSearchInput('')
+                                setSuggestions([])
+                              }}
+                              className="mobile-search-result flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:border-hemp-green-medium hover:bg-hemp-green-light/20 transition-all shadow-sm"
+                            >
+                              <div className="w-16 h-16 bg-hemp-beige rounded-lg overflow-hidden flex-shrink-0 mr-4">
+                                <img
+                                  src={suggestion.image || '/placeholder-image.jpg'}
+                                  alt={suggestion.text}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    if (target.parentElement) {
+                                      target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-400"><svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div>';
+                                    }
+                                  }}
+                                />
                               </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-gray-800 truncate mb-1 text-base">{product.name}</h3>
-                            <p className="text-sm text-gray-500 mb-2">{product.category}</p>
-                            <p className="text-hemp-green-dark font-bold text-lg">${product.price}</p>
-                          </div>
-                        </Link>
-                      ))}
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-gray-800 truncate mb-1 text-base">{suggestion.text}</h3>
+                                <p className="text-sm text-gray-500 mb-2">Product</p>
+                                <p className="text-hemp-green-dark font-bold text-lg">${suggestion.price}</p>
+                              </div>
+                            </Link>
+                          )
+                        } else {
+                          return (
+                            <button
+                              key={`mobile-${suggestion.type}-${suggestion.text}-${index}`}
+                              onClick={() => {
+                                setSearchInput(suggestion.text)
+                                router.push(`/shop?search=${encodeURIComponent(suggestion.text)}`)
+                                setIsSearchOpen(false)
+                                setSuggestions([])
+                              }}
+                              className="mobile-search-result flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:border-hemp-green-medium hover:bg-hemp-green-light/20 transition-all shadow-sm w-full text-left"
+                            >
+                              <div className="w-16 h-16 bg-hemp-beige rounded-lg overflow-hidden flex-shrink-0 mr-4 flex items-center justify-center">
+                                <Search className="h-6 w-6 text-hemp-green-dark" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-gray-800 truncate mb-1 text-base">{suggestion.text}</h3>
+                                <p className="text-sm text-gray-500 mb-2">
+                                  {suggestion.type === 'category' ? 'Category' : 
+                                   suggestion.type === 'history' ? 'Previous search' : 'Suggestion'}
+                                  {suggestion.popularity && ` • ${suggestion.popularity} searches`}
+                                </p>
+                              </div>
+                            </button>
+                          )
+                        }
+                      })}
                     </div>
-                    {results.length > 8 && (
-                      <div className="mt-4">
-                        <button
-                          onClick={() => {
-                            router.push(`/shop?search=${encodeURIComponent(searchInput)}`)
-                            setIsSearchOpen(false)
-                            setSearchInput('')
-                            clearSearch()
-                          }}
-                          className="w-full p-4 bg-hemp-green-dark text-white rounded-xl font-semibold hover:bg-hemp-green-dark/90 transition-colors shadow-md"
-                        >
-                          View all {results.length} results →
-                        </button>
-                      </div>
-                    )}
+                    <div className="mt-4">
+                      <button
+                        onClick={() => {
+                          router.push(`/shop?search=${encodeURIComponent(searchInput)}`)
+                          setIsSearchOpen(false)
+                          setSearchInput('')
+                          setSuggestions([])
+                        }}
+                        className="w-full p-4 bg-hemp-green-dark text-white rounded-xl font-semibold hover:bg-hemp-green-dark/90 transition-colors shadow-md"
+                      >
+                        Search for "{searchInput}" →
+                      </button>
+                    </div>
                   </div>
                 ) : searchInput ? (
                   <div className="text-center py-12">

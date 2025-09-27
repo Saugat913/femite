@@ -10,7 +10,7 @@ export class ClientProductService {
   async searchProducts(query: string, limit: number = 10): Promise<Product[]> {
     try {
       const response = await apiService.get(
-        `${API_CONFIG.ENDPOINTS.PRODUCTS.LIST}?search=${encodeURIComponent(query)}&limit=${limit}`
+        `/api/search?q=${encodeURIComponent(query)}&limit=${limit}`
       )
       return response.data?.products || response.data || []
     } catch (error) {

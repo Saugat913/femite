@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { CartProvider } from '@/lib/cart-context'
+import { ServerCartProvider } from '@/lib/use-server-cart'
 import { SearchProvider } from '@/lib/search-context'
 import { AuthProvider } from '@/lib/auth-context'
 
@@ -31,9 +31,9 @@ export default function RootLayout({
       <body className={`${inter.className} bg-gray-50 antialiased`}>
         <AuthProvider>
           <SearchProvider>
-            <CartProvider>
+            <ServerCartProvider>
               {children}
-            </CartProvider>
+            </ServerCartProvider>
           </SearchProvider>
         </AuthProvider>
       </body>
