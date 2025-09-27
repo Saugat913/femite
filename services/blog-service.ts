@@ -43,8 +43,59 @@ export class BlogService {
       }))
     } catch (error) {
       console.error('Database query error in blog service:', error)
+      
+      // During build time, return static fallback blog posts
+      if (error instanceof Error && error.message?.includes('Database not available during static build phase')) {
+        return this.getStaticFallbackPosts()
+      }
+      
       return []
     }
+  }
+  
+  // Static fallback data for build time
+  private getStaticFallbackPosts(): any[] {
+    return [
+      {
+        id: '1',
+        title: 'Why Hemp is the Future of Sustainable Fashion',
+        excerpt: 'Learn about the incredible benefits of hemp fabric and why it\'s a game-changer for the fashion industry.',
+        content: '<p>Hemp is rapidly emerging as one of the most promising materials in sustainable fashion. Unlike conventional cotton, hemp requires significantly less water to grow and actually improves soil health through its cultivation process.</p>',
+        image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&h=600&fit=crop&crop=center',
+        category: 'Sustainability',
+        slug: 'hemp-future-sustainable-fashion',
+        publishedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        author: 'Hemp Clothing Co.',
+        metaTitle: 'Why Hemp is the Future of Sustainable Fashion | Hemp Clothing Co.',
+        metaDescription: 'Discover how hemp fabric is revolutionizing sustainable fashion with superior environmental benefits and fabric properties.'
+      },
+      {
+        id: '2',
+        title: 'Hemp Clothing Care Tips',
+        excerpt: 'Hemp is durable, but proper care ensures your clothes last even longer. Read our expert tips.',
+        content: '<p>Hemp clothing is incredibly durable and actually gets better with age, but following proper care instructions will ensure your garments last for decades.</p>',
+        image: 'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=800&h=600&fit=crop&crop=center',
+        category: 'Care & Tips',
+        slug: 'hemp-clothing-care-tips',
+        publishedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+        author: 'Hemp Clothing Co.',
+        metaTitle: 'Hemp Clothing Care Tips | Hemp Clothing Co.',
+        metaDescription: 'Learn expert tips for washing, drying, and caring for your hemp clothing to ensure maximum durability and comfort.'
+      },
+      {
+        id: '3',
+        title: 'The Environmental Impact of Hemp vs Cotton',
+        excerpt: 'Discover how hemp farming benefits the environment compared to traditional cotton production.',
+        content: '<p>When comparing hemp to conventional cotton, the environmental benefits of hemp become immediately clear. Let\'s examine the key differences in environmental impact.</p>',
+        image: 'https://images.unsplash.com/photo-1616401784845-180882ba9ba8?w=800&h=600&fit=crop&crop=center',
+        category: 'Environment',
+        slug: 'hemp-vs-cotton-environment',
+        publishedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+        author: 'Hemp Clothing Co.',
+        metaTitle: 'Hemp vs Cotton: Environmental Impact Comparison | Hemp Clothing Co.',
+        metaDescription: 'Compare the environmental impact of hemp vs cotton farming - water usage, pesticides, soil health, and carbon footprint.'
+      }
+    ]
   }
 
   private async getFromAPI(endpoint: string): Promise<any> {

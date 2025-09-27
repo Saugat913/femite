@@ -10,6 +10,7 @@ const getDbQuery = async () => {
   if (typeof window !== 'undefined') {
     throw new Error('Database access not available on client side')
   }
+  
   const { query } = await import('@/lib/db')
   return query
 }
@@ -37,6 +38,84 @@ export class ProductService {
     }
     
     return imageUrl
+  }
+
+  // Static fallback data for build time
+  private getStaticFallbackProducts(options: {
+    page?: number
+    limit?: number
+    category?: string
+    search?: string
+  } = {}): {
+    products: Product[]
+    total: number
+    page: number
+    limit: number
+    hasMore: boolean
+  } {
+    const staticProducts: Product[] = [
+      {
+        id: '1',
+        name: 'Essential Hemp T-Shirt',
+        description: 'Our signature hemp t-shirt made from 100% organic hemp. Naturally antimicrobial, UV protective, and incredibly soft.',
+        price: 45.00,
+        stock: 50,
+        image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&h=300&fit=crop&crop=center',
+        category: 'T-Shirts',
+        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+        colors: ['Natural', 'Forest Green', 'Earth Brown', 'Sage Green', 'Charcoal'],
+        features: ['UV Protection', 'Moisture Control', 'Durable Fabric', 'Antimicrobial', '100% Organic'],
+        isNew: false,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: '2',
+        name: 'Hemp Cargo Shorts',
+        description: 'Durable hemp cargo shorts perfect for outdoor adventures. Multiple pockets and comfortable fit.',
+        price: 65.00,
+        stock: 30,
+        image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400&h=300&fit=crop&crop=center',
+        category: 'Bottoms',
+        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+        colors: ['Natural', 'Forest Green', 'Earth Brown'],
+        features: ['UV Protection', 'Moisture Control', 'Durable Fabric', 'Antimicrobial', '100% Organic'],
+        isNew: true,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: '3',
+        name: 'Hemp Long Sleeve Shirt',
+        description: 'Comfortable long sleeve hemp shirt for cooler weather. Perfect for layering.',
+        price: 55.00,
+        stock: 25,
+        image: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400&h=300&fit=crop&crop=center',
+        category: 'Shirts',
+        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+        colors: ['Natural', 'Forest Green', 'Charcoal'],
+        features: ['UV Protection', 'Moisture Control', 'Durable Fabric', 'Antimicrobial', '100% Organic'],
+        isNew: false,
+        createdAt: new Date().toISOString()
+      }
+    ]
+    
+    const limit = options.limit || 12
+    const page = options.page || 1
+    const startIndex = (page - 1) * limit
+    const endIndex = startIndex + limit
+    
+    const filteredProducts = options.category 
+      ? staticProducts.filter(p => p.category.toLowerCase().includes(options.category!.toLowerCase()))
+      : staticProducts
+    
+    const paginatedProducts = filteredProducts.slice(startIndex, endIndex)
+    
+    return {
+      products: paginatedProducts,
+      total: filteredProducts.length,
+      page,
+      limit,
+      hasMore: endIndex < filteredProducts.length
+    }
   }
 
   // Format database products for frontend
@@ -123,6 +202,12 @@ export class ProductService {
       }
     } catch (error) {
       console.error('Database query error:', error)
+      
+      // During build time, return static fallback products
+      if (error instanceof Error && error.message?.includes('Database not available during static build phase')) {
+        return this.getStaticFallbackProducts(options)
+      }
+      
       return {
         products: [],
         total: 0,
@@ -161,6 +246,13 @@ export class ProductService {
       return result.rows.length > 0 ? this.formatProduct(result.rows[0]) : null
     } catch (error) {
       console.error('Database query error:', error)
+      
+      // During build time, return static fallback product
+      if (error instanceof Error && error.message?.includes('Database not available during static build phase')) {
+        const fallbackProducts = this.getStaticFallbackProducts({ limit: 1 })
+        return fallbackProducts.products.length > 0 ? fallbackProducts.products[0] : null
+      }
+      
       return null
     }
   }

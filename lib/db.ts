@@ -9,6 +9,12 @@ if (process.env.NODE_ENV === 'development' ||
 let pool: Pool
 
 export function getDb() {
+  // During build-time static generation, we might not have a database connection
+  // This is a more specific check than before
+  if (typeof process !== 'undefined' && process.env.NEXT_PHASE === 'phase-production-build') {
+    throw new Error('Database not available during static build phase')
+  }
+  
   if (!pool) {
     const connectionString = process.env.DATABASE_URL
     if (!connectionString) {
