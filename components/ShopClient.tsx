@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import type { Product } from '@/types'
+import { formatCurrency } from '@/lib/utils/format'
 
 interface ShopClientProps {
   initialProducts: Product[]
@@ -95,7 +96,7 @@ export default function ShopClient({ initialProducts, categories, initialSearchQ
                   </Link>
                 </h3>
                 <p className="text-hemp-green-dark font-semibold text-lg mb-2">
-                  ${product.price.toFixed(2)}
+                  {formatCurrency(product.price)}
                 </p>
                 <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                   {product.description}

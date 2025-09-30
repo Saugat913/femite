@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { ShoppingCart, Eye } from 'lucide-react'
 import { Product } from '@/types'
 import { useServerCart } from '@/lib/use-server-cart'
+import { formatCurrency } from '@/lib/utils/format'
 
 interface ProductCardProps {
   product: Product
@@ -100,7 +101,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           </h3>
         </Link>
         <div className="flex items-center justify-between mb-4">
-          <p className="text-xl font-bold text-hemp-green-dark">${product.price.toFixed(2)}</p>
+          <p className="text-xl font-bold text-hemp-green-dark">{formatCurrency(product.price)}</p>
           {product.isNew && (
             <span className="text-xs font-medium text-hemp-green-dark bg-hemp-green-light px-2 py-1 rounded-full">
               New Arrival

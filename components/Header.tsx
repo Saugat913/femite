@@ -310,7 +310,7 @@ export default function Header() {
                         My Account
                       </Link>
                       <Link 
-                        href="/orders" 
+                        href="/account/orders" 
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-hemp-green-light/30 transition-colors"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
@@ -634,7 +634,7 @@ export default function Header() {
                     My Account
                   </Link>
                   <Link 
-                    href="/orders" 
+                    href="/account/orders" 
                     className="flex items-center text-gray-600 hover:text-hemp-green-dark transition-colors py-2"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >

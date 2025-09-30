@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Package, Eye, Truck, Clock, CheckCircle, XCircle, AlertCircle, Download } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { formatCurrency, calculateSubtotal } from '@/lib/utils/format'
 
 interface OrderItem {
   id: string
@@ -208,7 +209,7 @@ export default function OrdersTab() {
                       {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                     </span>
                     <span className="font-bold text-lg text-gray-800">
-                      ${order.total.toFixed(2)}
+                      {formatCurrency(order.total)}
                     </span>
                   </div>
                 </div>
@@ -233,12 +234,12 @@ export default function OrdersTab() {
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-800 truncate">{item.name}</p>
                         <p className="text-sm text-gray-600">
-                          Qty: {item.quantity} × ${item.price.toFixed(2)}
+                          Qty: {item.quantity} × {formatCurrency(item.price)}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="font-medium text-gray-800">
-                          ${(item.quantity * item.price).toFixed(2)}
+                          {formatCurrency(calculateSubtotal(item.quantity, item.price))}
                         </p>
                       </div>
                     </div>
@@ -258,7 +259,7 @@ export default function OrdersTab() {
               <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-100">
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Link 
-                    href={`/orders/${order.id}`}
+                    href={`/account/orders/${order.id}`}
                     className="flex-1 bg-hemp-green-light text-hemp-green-dark py-2 px-4 rounded-lg text-sm font-medium hover:bg-hemp-green-light/80 transition-colors text-center flex items-center justify-center"
                   >
                     <Eye className="w-4 h-4 mr-2" />
