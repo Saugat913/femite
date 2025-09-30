@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { User, Package, MapPin, CreditCard, Edit, Eye, Truck, LogIn, Plus, Trash2, Star, Calendar, DollarSign } from 'lucide-react'
 import Layout from '@/components/Layout'
 import AddressForm from '@/components/AddressForm'
+import OrdersTab from '@/components/OrdersTab'
 import { useAuth } from '@/lib/auth-context'
 import { AddressAPI } from '@/lib/api/addresses'
 import type { Address, CreateAddressRequest } from '@/lib/types/address'
@@ -23,11 +24,7 @@ export default function AccountPage() {
   const [showAddressForm, setShowAddressForm] = useState(false)
   const [editingAddress, setEditingAddress] = useState<Address | null>(null)
 
-  // State for orders management
-  const [orders, setOrders] = useState<any[]>([])
-  const [ordersLoading, setOrdersLoading] = useState(false)
-  const [ordersError, setOrdersError] = useState('')
-  const [ordersPage, setOrdersPage] = useState(1)
+  // Orders management is now handled by OrdersTab component
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -79,45 +76,13 @@ export default function AccountPage() {
     }
   }
 
-  // Fetch user orders
-  const fetchOrders = async () => {
-    if (!isAuthenticated) return
-    
-    setOrdersLoading(true)
-    setOrdersError('')
-    
-    try {
-      const response = await fetch(`/api/orders?page=${ordersPage}&limit=10`, {
-        credentials: 'include',
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
-          setOrders(data.data.orders)
-        } else {
-          setOrdersError('Failed to load orders')
-        }
-      } else {
-        setOrdersError('Failed to load orders')
-      }
-    } catch (error) {
-      console.error('Error fetching orders:', error)
-      setOrdersError('Failed to load orders')
-    } finally {
-      setOrdersLoading(false)
-    }
-  }
 
   // Load addresses when user is authenticated
   useEffect(() => {
     if (isAuthenticated && activeTab === 'addresses') {
       fetchAddresses()
     }
-    if (isAuthenticated && activeTab === 'orders') {
-      fetchOrders()
-    }
-  }, [isAuthenticated, activeTab, ordersPage])
+  }, [isAuthenticated, activeTab])
 
   // Show loading state
   if (loading) {
@@ -474,6 +439,11 @@ export default function AccountPage() {
                   />
                 )}
               </div>
+            )}
+
+            {/* Orders Tab */}
+            {activeTab === 'orders' && (
+              <OrdersTab />
             )}
           </div>
         </div>

@@ -71,12 +71,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       expand: ['data.price.product']
     })
 
-    // Create the order
+    // Create the order with proper status fields
     await query(
       `INSERT INTO orders (
-        id, user_id, total_amount, status, 
+        id, user_id, total, total_amount, status, status_v2,
         stripe_session_id, shipping_address, created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+      ) VALUES ($1, $2, $3, $3, $4, $4, $5, $6, NOW())`,
       [orderId, userId, totalAmount, 'paid', session.id, shippingAddress]
     )
 
@@ -93,7 +93,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           orderId,
           product.metadata?.product_id || product.id,
           product.name,
-          item.quantity,
+          item.quantity || 1,
           item.amount_total ? item.amount_total / 100 : 0
         ]
       )
@@ -107,7 +107,48 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       }
     }
 
+    // Create initial order status history
+    await query(
+      `INSERT INTO order_status_history (
+        id, order_id, status, notes, created_at
+      ) VALUES ($1, $2, $3, $4, NOW())`,
+      [
+        uuidv4(),
+        orderId,
+        'paid',
+        `Payment completed via Stripe session ${session.id}`
+      ]
+    )
+
     console.log('Order created successfully:', orderId)
+
+    // Notify admin panel about new order (fire and forget)
+    try {
+      const adminNotificationUrl = process.env.NEXT_PUBLIC_APP_URL + '/api/revalidate'
+      const revalidationSecret = process.env.REVALIDATION_SECRET
+      
+      if (adminNotificationUrl && revalidationSecret) {
+        // Trigger admin panel cache revalidation for orders
+        fetch(adminNotificationUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            secret: revalidationSecret,
+            type: 'order_created',
+            id: orderId,
+            timestamp: new Date().toISOString()
+          })
+        }).catch(error => {
+          console.log('Admin panel notification failed (non-critical):', error)
+        })
+        
+        console.log('Admin panel notified of new order:', orderId)
+      }
+    } catch (error) {
+      console.log('Admin notification setup failed (non-critical):', error)
+    }
 
     // Send order confirmation emails
     try {

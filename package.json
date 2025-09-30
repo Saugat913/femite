@@ -10,7 +10,9 @@
     "serve": "next start",
     "serve:prod": "NODE_ENV=production next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "sync-orders": "node scripts/sync-orders-with-admin.js",
+    "test-orders": "node scripts/test-order-system.js"
   },
   "dependencies": {
     "@stripe/stripe-js": "^7.9.0",

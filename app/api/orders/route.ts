@@ -28,14 +28,14 @@ export async function GET(request: NextRequest) {
     const ordersResult = await query(`
       SELECT 
         o.id,
-        o.total,
-        o.status,
+        COALESCE(o.total_amount, o.total) as total,
+        COALESCE(o.status_v2, o.status) as status,
         o.created_at,
         COUNT(oi.id) as item_count
       FROM orders o
       LEFT JOIN order_items oi ON o.id = oi.order_id
       WHERE o.user_id = $1
-      GROUP BY o.id, o.total, o.status, o.created_at
+      GROUP BY o.id, o.total_amount, o.total, o.status_v2, o.status, o.created_at
       ORDER BY o.created_at DESC
       LIMIT $2 OFFSET $3
     `, [session.userId, limit, offset])
@@ -49,11 +49,11 @@ export async function GET(request: NextRequest) {
           oi.id,
           oi.quantity,
           oi.price,
-          p.id as product_id,
-          p.name,
+          oi.product_id,
+          COALESCE(oi.product_name, p.name) as name,
           p.image_url
         FROM order_items oi
-        JOIN products p ON oi.product_id = p.id
+        LEFT JOIN products p ON oi.product_id = p.id
         WHERE oi.order_id = $1
       `, [order.id])
 

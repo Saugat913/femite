@@ -30,9 +30,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 })
     }
 
-    // Get order details from database
+    // Get order details from database with enhanced information
     const orderResult = await query(
-      'SELECT id, total_amount, status, created_at FROM orders WHERE stripe_session_id = $1',
+      `SELECT 
+        o.id, 
+        COALESCE(o.total_amount, o.total) as total_amount, 
+        COALESCE(o.status_v2, o.status) as status, 
+        o.created_at,
+        o.tracking_number,
+        o.notes
+      FROM orders o 
+      WHERE o.stripe_session_id = $1`,
       [sessionId]
     )
 
@@ -49,6 +57,8 @@ export async function GET(request: NextRequest) {
         total: parseFloat(order.total_amount),
         status: order.status,
         created_at: order.created_at,
+        tracking_number: order.tracking_number,
+        notes: order.notes,
         stripe_session: {
           id: stripeSession.id,
           payment_status: stripeSession.payment_status,

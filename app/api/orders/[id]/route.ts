@@ -18,16 +18,21 @@ export async function GET(
 
     const orderId = params.id
 
-    // Get order details
+    // Get order details with enhanced information
     const orderResult = await query(`
       SELECT 
         o.id,
-        o.total,
-        o.status,
+        COALESCE(o.total_amount, o.total) as total,
+        COALESCE(o.status_v2, o.status) as status,
         o.created_at,
-        u.email
+        o.updated_at,
+        o.user_id,
+        o.stripe_session_id,
+        o.stripe_payment_intent_id,
+        o.shipping_address,
+        o.tracking_number,
+        o.notes
       FROM orders o
-      JOIN users u ON o.user_id = u.id
       WHERE o.id = $1 AND o.user_id = $2
     `, [orderId, session.userId])
 
@@ -46,12 +51,12 @@ export async function GET(
         oi.id,
         oi.quantity,
         oi.price,
-        p.id as product_id,
-        p.name,
+        oi.product_id,
+        COALESCE(oi.product_name, p.name) as name,
         p.image_url,
         p.description
       FROM order_items oi
-      JOIN products p ON oi.product_id = p.id
+      LEFT JOIN products p ON oi.product_id = p.id
       WHERE oi.order_id = $1
     `, [orderId])
 
@@ -66,26 +71,12 @@ export async function GET(
       subtotal: parseFloat(item.price) * item.quantity
     }))
 
-    // Get payment information if available
-    const paymentResult = await query(`
-      SELECT 
-        p.id,
-        p.amount,
-        p.currency,
-        p.status,
-        p.payment_method,
-        p.created_at
-      FROM payments p
-      WHERE p.order_id = $1
-    `, [orderId])
-
-    const payment = paymentResult.rows.length > 0 ? {
-      id: paymentResult.rows[0].id,
-      amount: parseFloat(paymentResult.rows[0].amount),
-      currency: paymentResult.rows[0].currency,
-      status: paymentResult.rows[0].status,
-      paymentMethod: paymentResult.rows[0].payment_method,
-      createdAt: paymentResult.rows[0].created_at
+    // Payment information from order fields
+    const payment = order.stripe_session_id ? {
+      stripeSessionId: order.stripe_session_id,
+      stripePaymentIntentId: order.stripe_payment_intent_id,
+      method: 'stripe',
+      status: order.status
     } : null
 
     return NextResponse.json({
@@ -95,7 +86,10 @@ export async function GET(
         total: parseFloat(order.total),
         status: order.status,
         createdAt: order.created_at,
-        customerEmail: order.email,
+        updatedAt: order.updated_at,
+        trackingNumber: order.tracking_number,
+        notes: order.notes,
+        shippingAddress: order.shipping_address ? JSON.parse(order.shipping_address) : null,
         items,
         payment,
         summary: {
